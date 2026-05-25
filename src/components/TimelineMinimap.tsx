@@ -138,7 +138,7 @@ export default function TimelineMinimap({ onTaskClick, className = '' }: Timelin
                   width: `${widthPercent}%`,
                   backgroundColor: 'var(--task-text)'
                 }}
-                className={`absolute h-full opacity-90 border-x border-background/20 color-${task.color || 'indigo'} hover:opacity-100 hover:scale-y-110 transition-all cursor-pointer z-20`}
+                className={`absolute h-full opacity-90 rounded-md border-x border-background/20 color-${task.color || 'indigo'} hover:opacity-100 hover:scale-y-110 transition-all cursor-pointer z-20`}
                 title={`${task.title} (${formatTime12h(task.startTime!)} - ${formatTime12h(task.endTime!)})`}
                 onClick={() => onTaskClick?.(task, startMin)}
               />

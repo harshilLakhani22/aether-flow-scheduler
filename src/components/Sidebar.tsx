@@ -26,10 +26,10 @@ export default function Sidebar() {
   ];
 
   const handleResetData = () => {
-    if (confirm('Reset your tasks to default factory demo data? This will overwrite your custom changes.')) {
-      setTasks(MOCK_TASKS);
-      localStorage.setItem('task-tracker-tasks', JSON.stringify(MOCK_TASKS));
-      alert('Data reset successfully!');
+    if (confirm('Are you sure you want to completely clear all tasks? This cannot be undone.')) {
+      setTasks([]);
+      localStorage.setItem('task-tracker-tasks', JSON.stringify([]));
+      alert('Dashboard cleared successfully!');
     }
   };
 
@@ -129,11 +129,11 @@ export default function Sidebar() {
       <div className="p-4 border-t border-border space-y-2 shrink-0">
         <button
           onClick={handleResetData}
-          className="w-full flex items-center justify-center gap-2 py-1.5 hover:bg-muted border border-border rounded-md text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
-          title="Reset session to default factory data"
+          className="w-full flex items-center justify-center gap-2 py-1.5 hover:bg-muted border border-border rounded-md text-[10px] font-semibold text-muted-foreground hover:text-rose-500 transition-colors"
+          title="Completely clear all tasks"
         >
           <RefreshCw size={10} />
-          <span>Reset Session</span>
+          <span>Clear Dashboard</span>
         </button>
 
         <div className="flex items-center justify-between text-[9px] text-muted-foreground/80 font-bold uppercase tracking-wider px-1">

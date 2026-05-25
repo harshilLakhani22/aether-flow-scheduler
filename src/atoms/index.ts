@@ -6,7 +6,7 @@ import { MOCK_TASKS } from '@/utils/mockData';
 export const selectedDateAtom = atom<string>('2026-05-25');
 
 // Main tasks list atom (initialized with empty array for SSR safety, hydrated on client)
-export const tasksAtom = atom<Task[]>(MOCK_TASKS);
+export const tasksAtom = atom<Task[]>([]);
 
 // Syncing state helper (to check if tasks are loaded from localStorage)
 export const isLoadedAtom = atom<boolean>(false);
