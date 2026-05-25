@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { filteredTasksAtom, tasksAtom, isTaskCreateModalOpenAtom } from '@/atoms';
 import { TaskStatus } from '@/types';
 import TaskCard from './TaskCard';
+import TimelineMinimap from './TimelineMinimap';
 
 interface Column {
   id: TaskStatus;
@@ -90,8 +91,13 @@ export default function TaskBoard() {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 h-full overflow-x-auto pb-4">
-      {COLUMNS.map((column) => {
+    <div className="flex flex-col h-full gap-5 overflow-hidden">
+      <div className="glass-panel border border-border rounded-xl overflow-hidden shrink-0">
+        <TimelineMinimap className="border-b-0 bg-transparent" />
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 flex-1 overflow-x-auto pb-4">
+        {COLUMNS.map((column) => {
         const colTasks = getColTasks(column.id);
         const isTarget = dragOverCol === column.id;
 
@@ -149,6 +155,7 @@ export default function TaskBoard() {
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

@@ -15,6 +15,7 @@ import {
   Clock, Plus, Folder, AlertTriangle, 
   Inbox, Sparkles, CheckSquare, Square, ArrowUpRight
 } from 'lucide-react';
+import TimelineMinimap from './TimelineMinimap';
 
 const HOUR_HEIGHT = 96; // 96px per hour for a spacious, readable scrolling timeline
 const MINUTES_PER_SLOT = 30; // 30-minute drop zones
@@ -271,74 +272,16 @@ export default function TimelineView() {
     <div className="flex flex-col lg:flex-row gap-6 h-full select-none text-foreground bg-background">
       {/* 1. Left Section: Vertical scrollable timeline calendar */}
       <div className="flex-1 glass-panel border border-border rounded-xl flex flex-col h-[calc(100vh-210px)] overflow-hidden bg-card">
-        {/* Sub-header inside timeline showing stats & Minimap */}
-        <div className="px-5 py-4 border-b border-border bg-muted/10 flex flex-col gap-4 shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Clock size={15} className="text-primary" />
-              <span className="uppercase tracking-widest text-[11px] font-extrabold text-foreground">Timeline Overview</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                <span className="w-2.5 h-2.5 rounded-full bg-primary/80 shadow-sm" />
-                <span>{scheduledTasks.length} Planned Blocks</span>
-              </span>
-            </div>
-          </div>
-          
-          {/* Horizontal Full-Day Minimap */}
-          <div className="space-y-1.5">
-            <div className="h-3 w-full bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full border border-emerald-500/20 overflow-hidden relative select-none shadow-inner flex items-center group">
-              {/* Render actual scheduled tasks on the minimap */}
-              {scheduledTasks.map((task) => {
-                const startMin = timeToMinutes(task.startTime!);
-                const duration = task.duration || task.estimatedDuration || 60;
-                const endMin = Math.min(1440, startMin + duration);
-                
-                const startPercent = (startMin / 1440) * 100;
-                const widthPercent = ((endMin - startMin) / 1440) * 100;
-                
-                return (
-                  <div 
-                    key={`mini-${task.id}`}
-                    style={{ 
-                      left: `${startPercent}%`, 
-                      width: `${widthPercent}%`,
-                      backgroundColor: 'var(--task-text)'
-                    }}
-                    className={`absolute h-full opacity-85 border-r border-background color-${task.color || 'indigo'} hover:opacity-100 transition-opacity cursor-pointer`}
-                    title={`${task.title} (${formatTime12h(task.startTime!)} - ${formatTime12h(task.endTime!)})`}
-                    onClick={() => {
-                      if (timelineScrollRef.current) {
-                        timelineScrollRef.current.scrollTo({ 
-                          top: startMin * (HOUR_HEIGHT / 60) - 40, 
-                          behavior: 'smooth' 
-                        });
-                      }
-                    }}
-                  />
-                );
-              })}
-              
-              {/* Current Time Indicator on minimap */}
-              {isSelectedDayToday() && currentTime && (
-                <div 
-                  style={{ left: `${((currentTime.getHours() * 60 + currentTime.getMinutes()) / 1440) * 100}%` }}
-                  className="absolute top-0 bottom-0 w-[2px] bg-rose-500 z-10 shadow-[0_0_8px_rgba(244,63,94,0.8)] transition-all pointer-events-none"
-                />
-              )}
-            </div>
-            
-            {/* Minimap Labels */}
-            <div className="flex justify-between text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest px-1">
-              <span>12 AM</span>
-              <span>6 AM</span>
-              <span>12 PM</span>
-              <span>6 PM</span>
-              <span>11:59 PM</span>
-            </div>
-          </div>
-        </div>
+        <TimelineMinimap 
+          onTaskClick={(task, startMin) => {
+            if (timelineScrollRef.current) {
+              timelineScrollRef.current.scrollTo({ 
+                top: startMin * (HOUR_HEIGHT / 60) - 40, 
+                behavior: 'smooth' 
+              });
+            }
+          }}
+        />
 
         {/* Outer Scroll Container */}
         <div
