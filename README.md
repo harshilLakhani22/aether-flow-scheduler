@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Aether // Flow ⚡️
 
-## Getting Started
+A gorgeous, production-grade Kanban and Time-Blocking hybrid scheduler designed for deep-work professionals. Built with Next.js 16, Tailwind CSS, Framer Motion, and Jotai.
 
-First, run the development server:
+![Aether Flow Preview](https://github.com/user-attachments/assets/preview) 
+*(Screenshot coming soon)*
+
+## ✨ Features
+- **Fluid Kanban Workflow:** Drag and drop tasks across columns with buttery-smooth Framer Motion layout physics.
+- **Dynamic Time-Blocking:** A highly interactive, scrollable vertical timeline to perfectly plan out your deep-work schedule.
+- **Horizon Minimap:** A beautiful, responsive horizontal mini-map that provides a color-coded bird's eye view of your entire day's schedule.
+- **Auto-Sync Storage:** All dashboard state is handled blazingly fast using Jotai atoms and is automatically persisted to local storage.
+- **Space Ivory & Space Black Themes:** Flawless CSS token inheritance for vibrant colors in both Light and Dark mode.
+
+## 🚀 Getting Started
 
 ```bash
+# Install dependencies
+npm install
+
+# Start the development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser to start scheduling.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠 Architecture & Tech Stack
+- **Framework:** [Next.js 16](https://nextjs.org/) (App Router & Turbopack)
+- **State Management:** [Jotai](https://jotai.org/) (Atomic State)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+- **Motion Physics:** [Framer Motion](https://www.framer.com/motion/)
+- **Drag & Drop:** [@dnd-kit/core](https://dndkit.com/)
+- **Iconography:** [Lucide React](https://lucide.dev/)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📝 License
+MIT License

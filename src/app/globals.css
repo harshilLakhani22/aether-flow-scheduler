@@ -1,26 +1,267 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
+  --color-border: var(--border);
+  --color-input: var(--border);
+  --color-ring: var(--ring);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+
+  --radius-lg: 0.75rem;
+  --radius-md: 0.5rem;
+  --radius-sm: 0.25rem;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* 1. Eye-Friendly Light Theme (Default) */
+:root {
+  color-scheme: light;
+  --background: #f7f7fa; /* warm off-white, extremely comfortable */
+  --foreground: #18181b; /* charcoal */
+  --border: #e4e4e7; /* soft zinc-200 border */
+  --card: #ffffff;
+  --card-foreground: #18181b;
+  --popover: #ffffff;
+  --popover-foreground: #18181b;
+  --primary: #18181b;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #e4e4e7;
+  --accent-foreground: #18181b;
+  --ring: #18181b;
+}
+
+/* 2. Extreme Space Black Theme */
+.dark {
+  color-scheme: dark;
+  --background: #000000; /* pitch black */
+  --foreground: #fafafa;
+  --border: #161619; /* subtle dark border */
+  --card: #08080a;
+  --card-foreground: #fafafa;
+  --popover: #09090b;
+  --popover-foreground: #fafafa;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --secondary: #0d0d10;
+  --secondary-foreground: #fafafa;
+  --muted: #0d0d10;
+  --muted-foreground: #71717a;
+  --accent: #18181b;
+  --accent-foreground: #ffffff;
+  --ring: #ffffff;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Scrollbars adapting to background variables */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* Clean, flat structural panels */
+.glass-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+
+.glass-panel-glow {
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+}
+
+.dark .glass-panel-glow {
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+}
+
+.glass-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  border-color: var(--accent);
+  background: var(--secondary);
+}
+
+/* Timeline grid dividers */
+.timeline-hour-row {
+  border-bottom: 1px solid var(--border);
+  opacity: 0.65;
+}
+
+.timeline-half-hour-line {
+  border-top: 1px dashed var(--border);
+  opacity: 0.45;
+}
+
+/* 3. Task Hues: Light Mode soft pastel backgrounds with darker text (extremely comfortable) */
+.color-indigo {
+  --task-bg: #f5f3ff;
+  --task-border: #ddd6fe;
+  --task-text: #4c1d95;
+  --task-accent: #7c3aed;
+}
+
+.color-emerald {
+  --task-bg: #ecfdf5;
+  --task-border: #a7f3d0;
+  --task-text: #064e3b;
+  --task-accent: #059669;
+}
+
+.color-amber {
+  --task-bg: #fffbeb;
+  --task-border: #fde68a;
+  --task-text: #78350f;
+  --task-accent: #d97706;
+}
+
+.color-rose {
+  --task-bg: #fff5f5;
+  --task-border: #fecaca;
+  --task-text: #7f1d1d;
+  --task-accent: #e11d48;
+}
+
+.color-sky {
+  --task-bg: #f0f9ff;
+  --task-border: #bae6fd;
+  --task-text: #0c4a6e;
+  --task-accent: #0284c7;
+}
+
+.color-violet {
+  --task-bg: #faf5ff;
+  --task-border: #e9d5ff;
+  --task-text: #581c87;
+  --task-accent: #9333ea;
+}
+
+/* 4. Task Hues: Dark Mode desaturated overlays melting into black */
+.dark {
+  .color-indigo {
+    --task-bg: rgba(129, 140, 248, 0.02);
+    --task-border: rgba(129, 140, 248, 0.12);
+    --task-text: #a5b4fc;
+    --task-accent: #818cf8;
+  }
+
+  .color-emerald {
+    --task-bg: rgba(52, 211, 153, 0.02);
+    --task-border: rgba(52, 211, 153, 0.12);
+    --task-text: #6ee7b7;
+    --task-accent: #34d399;
+  }
+
+  .color-amber {
+    --task-bg: rgba(251, 191, 36, 0.02);
+    --task-border: rgba(251, 191, 36, 0.12);
+    --task-text: #fde047;
+    --task-accent: #fbbf24;
+  }
+
+  .color-rose {
+    --task-bg: rgba(244, 63, 94, 0.02);
+    --task-border: rgba(244, 63, 94, 0.12);
+    --task-text: #fda4af;
+    --task-accent: #fb7185;
+  }
+
+  .color-sky {
+    --task-bg: rgba(56, 189, 248, 0.02);
+    --task-border: rgba(56, 189, 248, 0.12);
+    --task-text: #7dd3fc;
+    --task-accent: #38bdf8;
+  }
+
+  .color-violet {
+    --task-bg: rgba(167, 139, 250, 0.02);
+    --task-border: rgba(167, 139, 250, 0.12);
+    --task-text: #c084fc;
+    --task-accent: #a78bfa;
+  }
+}
+
+.task-styled-block {
+  background-color: var(--task-bg);
+  border: 1px solid var(--task-border);
+  color: var(--task-text);
+  border-left-width: 3px;
+  border-left-color: var(--task-accent);
+}
+
+.task-styled-block:hover {
+  background-color: rgba(from var(--task-accent) r g b / 0.05);
+  border-color: rgba(from var(--task-accent) r g b / 0.35);
+}
+
+.priority-urgent-glow {
+  border-color: rgba(244, 63, 94, 0.3) !important;
+}
+
+/* Subtle, distraction-free animations */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 0.4; }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2.5s infinite ease-in-out;
+}
+
+/* Dragging state shadows */
+.dragging-block {
+  opacity: 0.4;
+  cursor: grabbing !important;
+}
+
+.dragging-card {
+  opacity: 0.4;
+  border-style: dashed !important;
 }
