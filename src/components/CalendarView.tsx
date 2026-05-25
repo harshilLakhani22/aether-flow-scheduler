@@ -5,6 +5,7 @@ import { useAtom, useSetAtom } from 'jotai';
 import { selectedDateAtom, currentViewAtom, tasksAtom } from '@/atoms';
 import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, Info } from 'lucide-react';
 import { minutesToTime } from '@/utils/time';
+import { motion } from 'framer-motion';
 
 export default function CalendarView() {
   const [selectedDate, setSelectedDate] = useAtom(selectedDateAtom);
@@ -136,8 +137,11 @@ export default function CalendarView() {
           {calendarDays.map((day, idx) => {
             if (day === null) {
               return (
-                <div
+                <motion.div
                   key={`empty-${idx}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.2, delay: idx * 0.01 }}
                   className="aspect-video sm:aspect-square bg-muted/20 border border-border/50 rounded-xl animate-pulse-subtle"
                 />
               );
@@ -164,8 +168,11 @@ export default function CalendarView() {
             }
  
             return (
-              <div
+              <motion.div
                 key={day}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2, delay: idx * 0.01 }}
                 onClick={() => handleDateClick(day)}
                 className={`aspect-video sm:aspect-square border rounded-xl p-2.5 flex flex-col justify-between cursor-pointer transition-all ${loadBg} ${
                   isSelected
@@ -215,7 +222,7 @@ export default function CalendarView() {
                     No tasks
                   </div>
                 )}
-              </div>
+              </motion.div>
             );
           })}
         </div>

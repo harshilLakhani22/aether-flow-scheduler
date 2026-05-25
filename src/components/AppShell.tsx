@@ -17,6 +17,7 @@ import CalendarView from './CalendarView';
 import ListView from './ListView';
 import TaskDrawer from './TaskDrawer';
 import TaskCreateModal from './TaskCreateModal';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export default function AppShell() {
   const [theme] = useAtom(themeAtom);
@@ -107,6 +108,35 @@ export default function AppShell() {
     }
   };
 
+  if (!isLoaded) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <motion.div
+            animate={{ 
+              rotate: [0, 180, 360],
+              borderRadius: ["20%", "50%", "20%"]
+            }}
+            transition={{
+              duration: 2,
+              ease: "easeInOut",
+              repeat: Infinity,
+            }}
+            className="w-12 h-12 bg-primary/20 border-2 border-primary shadow-[0_0_15px_rgba(var(--primary),0.5)]"
+          />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
+            className="text-xs font-bold tracking-widest text-muted-foreground uppercase"
+          >
+            Initializing Session...
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
       {/* Sidebar Panel Left */}
@@ -121,7 +151,18 @@ export default function AppShell() {
         <div className="flex-1 overflow-y-auto p-6 flex flex-col min-h-0">
           {/* Core Panel Content views */}
           <div className="flex-1 min-h-0 relative">
-            {renderActiveView()}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentView}
+                initial={{ opacity: 0, y: 10, scale: 0.98, filter: "blur(4px)" }}
+                animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -10, scale: 0.98, filter: "blur(4px)" }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className="w-full h-full"
+              >
+                {renderActiveView()}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>
