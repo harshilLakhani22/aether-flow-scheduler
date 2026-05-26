@@ -39,10 +39,10 @@ const COLORS = [
   { name: 'rose', hex: '#f43f5e' },
   { name: 'sky', hex: '#0ea5e9' },
   { name: 'violet', hex: '#8b5cf6' },
+  { name: 'teal', hex: '#14b8a6' },
+  { name: 'orange', hex: '#f97316' },
+  { name: 'slate', hex: '#64748b' },
   { name: 'fuchsia', hex: '#d946ef' },
-  { name: 'cyan', hex: '#06b6d4' },
-  { name: 'lime', hex: '#84cc16' },
-  { name: 'pink', hex: '#ec4899' },
 ];
 
 export default function TaskCreateModal() {

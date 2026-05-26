@@ -183,6 +183,34 @@ body {
   --task-accent: #9333ea;
 }
 
+.color-teal {
+  --task-bg: #f0fdfa;
+  --task-border: #99f6e4;
+  --task-text: #0f766e;
+  --task-accent: #0d9488;
+}
+
+.color-orange {
+  --task-bg: #fff7ed;
+  --task-border: #fed7aa;
+  --task-text: #c2410c;
+  --task-accent: #ea580c;
+}
+
+.color-slate {
+  --task-bg: #f8fafc;
+  --task-border: #cbd5e1;
+  --task-text: #334155;
+  --task-accent: #475569;
+}
+
+.color-fuchsia {
+  --task-bg: #fdf4ff;
+  --task-border: #f5d0fe;
+  --task-text: #a21caf;
+  --task-accent: #c026d3;
+}
+
 /* 4. Task Hues: Dark Mode desaturated overlays melting into black */
 .dark {
   .color-indigo {
@@ -225,6 +253,34 @@ body {
     --task-border: rgba(167, 139, 250, 0.12);
     --task-text: #c084fc;
     --task-accent: #a78bfa;
+  }
+
+  .color-teal {
+    --task-bg: rgba(20, 184, 166, 0.02);
+    --task-border: rgba(20, 184, 166, 0.12);
+    --task-text: #5eead4;
+    --task-accent: #14b8a6;
+  }
+
+  .color-orange {
+    --task-bg: rgba(249, 115, 22, 0.02);
+    --task-border: rgba(249, 115, 22, 0.12);
+    --task-text: #fdba74;
+    --task-accent: #f97316;
+  }
+
+  .color-slate {
+    --task-bg: rgba(100, 116, 139, 0.02);
+    --task-border: rgba(100, 116, 139, 0.12);
+    --task-text: #cbd5e1;
+    --task-accent: #64748b;
+  }
+
+  .color-fuchsia {
+    --task-bg: rgba(217, 70, 239, 0.02);
+    --task-border: rgba(217, 70, 239, 0.12);
+    --task-text: #f0abfc;
+    --task-accent: #d946ef;
   }
 }
 
