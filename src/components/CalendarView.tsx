@@ -149,7 +149,7 @@ export default function CalendarView() {
  
             const dateStr = formatDateString(day);
             const isSelected = dateStr === selectedDate;
-            const isToday = dateStr === '2026-05-25'; // Match our mock context current "Today" date
+            const isToday = dateStr === format(new Date(), 'yyyy-MM-dd'); // Match actual today date
             const stats = getDayStats(day);
  
             // Determine load colors

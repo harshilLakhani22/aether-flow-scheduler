@@ -37,15 +37,15 @@ export default function Topbar() {
   };
 
   const handleSetToday = () => {
-    setSelectedDate('2026-05-25');
+    setSelectedDate(format(new Date(), 'yyyy-MM-dd'));
   };
 
   // Format date elegantly, e.g. "Monday, May 25, 2026"
   const getFormattedDate = () => {
     try {
       const parsed = parseISO(selectedDate);
-      if (selectedDate === '2026-05-25') {
-        return 'Today, May 25';
+      if (selectedDate === format(new Date(), 'yyyy-MM-dd')) {
+        return `Today, ${format(parsed, 'MMM d')}`;
       }
       return format(parsed, 'EEEE, MMM d');
     } catch {

@@ -1,9 +1,9 @@
 import { atom } from 'jotai';
 import { Task, TaskFilters, ViewType } from '@/types';
-import { MOCK_TASKS } from '@/utils/mockData';
+import { format } from 'date-fns';
 
 // Selected date string (YYYY-MM-DD)
-export const selectedDateAtom = atom<string>('2026-05-25');
+export const selectedDateAtom = atom<string>(format(new Date(), 'yyyy-MM-dd'));
 
 // Main tasks list atom (initialized with empty array for SSR safety, hydrated on client)
 export const tasksAtom = atom<Task[]>([]);
