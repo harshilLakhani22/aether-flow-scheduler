@@ -66,6 +66,20 @@ export default function TaskCreateModal() {
   const [endTime, setEndTime] = useState('');
   const [estimatedDuration, setEstimatedDuration] = useState(60);
 
+  const durHours = Math.floor(estimatedDuration / 60);
+  const durMins = estimatedDuration % 60;
+
+  const updateDuration = (hours: number, mins: number) => {
+    const total = Math.max(0, hours * 60 + mins);
+    setEstimatedDuration(total);
+    if (startTime) {
+      const startMin = timeToMinutes(startTime);
+      const endMin = (startMin + total) % 1440;
+      setEndTime(minutesToTime(endMin));
+      setTimeError(null);
+    }
+  };
+
   const [timeError, setTimeError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -83,7 +97,7 @@ export default function TaskCreateModal() {
       if (prefillTime) {
         setStartTime(prefillTime);
         const startMin = timeToMinutes(prefillTime);
-        const endMin = Math.min(1439, startMin + 60);
+        const endMin = (startMin + 60) % 1440;
         setEndTime(minutesToTime(endMin));
         setEstimatedDuration(60);
       } else {
@@ -285,25 +299,33 @@ export default function TaskCreateModal() {
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1 ml-1">
-                    <Sparkles size={11} /> Est. Duration (Min)
+                    <Sparkles size={11} /> Est. Duration
                   </label>
-                  <input
-                    type="number"
-                    value={estimatedDuration}
-                    min="5"
-                    step="5"
-                    onChange={(e) => {
-                      const mins = Number(e.target.value);
-                      setEstimatedDuration(mins);
-                      if (startTime) {
-                        const startMin = timeToMinutes(startTime);
-                        const endMin = Math.min(1439, startMin + mins);
-                        setEndTime(minutesToTime(endMin));
-                        setTimeError(null);
-                      }
-                    }}
-                    className="w-full bg-background/80 border border-border/60 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground shadow-inner focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
-                  />
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1 group">
+                      <input
+                        type="number"
+                        min="0"
+                        value={durHours === 0 ? '' : durHours}
+                        onChange={(e) => updateDuration(Number(e.target.value), durMins)}
+                        placeholder="0"
+                        className="w-full bg-background/80 border border-border/60 rounded-xl pl-3 pr-7 py-2.5 text-sm font-medium text-foreground shadow-inner focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all group-hover:border-border"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-muted-foreground pointer-events-none">h</span>
+                    </div>
+                    <div className="relative flex-1 group">
+                      <input
+                        type="number"
+                        min="0"
+                        max="59"
+                        value={durMins === 0 ? '' : durMins}
+                        onChange={(e) => updateDuration(durHours, Number(e.target.value))}
+                        placeholder="0"
+                        className="w-full bg-background/80 border border-border/60 rounded-xl pl-3 pr-7 py-2.5 text-sm font-medium text-foreground shadow-inner focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all group-hover:border-border"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-muted-foreground pointer-events-none">m</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -319,7 +341,7 @@ export default function TaskCreateModal() {
                         setStartTime(newStart);
                         if (newStart && estimatedDuration) {
                           const startMin = timeToMinutes(newStart);
-                          const endMin = Math.min(1439, startMin + estimatedDuration);
+                          const endMin = (startMin + estimatedDuration) % 1440;
                           setEndTime(minutesToTime(endMin));
                           setTimeError(null);
                         }
@@ -341,12 +363,11 @@ export default function TaskCreateModal() {
                         if (startTime && newEnd) {
                           const startMin = timeToMinutes(startTime);
                           const endMin = timeToMinutes(newEnd);
-                          if (endMin > startMin) {
-                            setEstimatedDuration(endMin - startMin);
-                            setTimeError(null);
-                          } else {
-                            setTimeError('End time must occur after start time.');
-                          }
+                          
+                          // Support over midnight by adding 1440 if end time is less than start time
+                          const calculatedMins = endMin < startMin ? (endMin + 1440 - startMin) : (endMin - startMin);
+                          setEstimatedDuration(calculatedMins);
+                          setTimeError(null);
                         } else {
                           setTimeError(null);
                         }
