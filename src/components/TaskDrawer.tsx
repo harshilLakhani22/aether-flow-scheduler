@@ -15,7 +15,7 @@ import { calculateDuration, timeToMinutes } from '@/utils/time';
 
 const PRIORITIES: { value: TaskPriority; label: string; color: string; bg: string }[] = [
   { value: 'low', label: 'Low', color: 'text-muted-foreground', bg: 'bg-muted/50 border-border/60' },
-  { value: 'medium', label: 'Medium', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/30' },
+  { value: 'medium', label: 'Medium', color: 'text-orange-700 dark:text-orange-400', bg: 'bg-orange-100 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/30' },
   { value: 'high', label: 'High', color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-100 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-900/30' },
   { value: 'urgent', label: 'Urgent', color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-100 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/30' },
 ];
@@ -44,6 +44,10 @@ const COLORS = [
   { name: 'rose', hex: '#f43f5e' },
   { name: 'sky', hex: '#0ea5e9' },
   { name: 'violet', hex: '#8b5cf6' },
+  { name: 'fuchsia', hex: '#d946ef' },
+  { name: 'cyan', hex: '#06b6d4' },
+  { name: 'lime', hex: '#84cc16' },
+  { name: 'pink', hex: '#ec4899' },
 ];
 
 export default function TaskDrawer() {
@@ -398,9 +402,17 @@ export default function TaskDrawer() {
                       value={estimatedDuration}
                       min="5"
                       step="5"
-                      onChange={(e) => setEstimatedDuration(Number(e.target.value))}
-                      className="w-full bg-background/80 border border-border/60 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground shadow-inner focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all disabled:opacity-50"
-                      disabled={!!(startTime && endTime)}
+                      onChange={(e) => {
+                        const mins = Number(e.target.value);
+                        setEstimatedDuration(mins);
+                        if (startTime) {
+                          const startMin = timeToMinutes(startTime);
+                          const endMin = Math.min(1439, startMin + mins);
+                          setEndTime(minutesToTime(endMin));
+                          setTimeError('');
+                        }
+                      }}
+                      className="w-full bg-background/80 border border-border/60 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground shadow-inner focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -411,7 +423,16 @@ export default function TaskDrawer() {
                     <input
                       type="time"
                       value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
+                      onChange={(e) => {
+                        const newStart = e.target.value;
+                        setStartTime(newStart);
+                        if (newStart && estimatedDuration) {
+                          const startMin = timeToMinutes(newStart);
+                          const endMin = Math.min(1439, startMin + estimatedDuration);
+                          setEndTime(minutesToTime(endMin));
+                          setTimeError('');
+                        }
+                      }}
                       className="w-full bg-background/80 border border-border/60 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground shadow-inner focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
                     />
                   </div>
@@ -421,7 +442,22 @@ export default function TaskDrawer() {
                     <input
                       type="time"
                       value={endTime}
-                      onChange={(e) => setEndTime(e.target.value)}
+                      onChange={(e) => {
+                        const newEnd = e.target.value;
+                        setEndTime(newEnd);
+                        if (startTime && newEnd) {
+                          const startMin = timeToMinutes(startTime);
+                          const endMin = timeToMinutes(newEnd);
+                          if (endMin > startMin) {
+                            setEstimatedDuration(endMin - startMin);
+                            setTimeError('');
+                          } else {
+                            setTimeError('End time must occur after start time.');
+                          }
+                        } else {
+                          setTimeError('');
+                        }
+                      }}
                       className="w-full bg-background/80 border border-border/60 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground shadow-inner focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
                     />
                   </div>
@@ -449,7 +485,7 @@ export default function TaskDrawer() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 ml-1">
-                    <Folder size={12} /> Project
+                    <Folder size={12} /> Project <span className="opacity-60 normal-case font-medium ml-1">(Optional)</span>
                   </label>
                   <input
                     type="text"
@@ -462,7 +498,7 @@ export default function TaskDrawer() {
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 ml-1">
-                    <Tag size={12} /> Tags
+                    <Tag size={12} /> Tags <span className="opacity-60 normal-case font-medium ml-1">(Optional)</span>
                   </label>
                   <input
                     type="text"
