@@ -6,6 +6,7 @@ import { selectedDateAtom, currentViewAtom, tasksAtom } from '@/atoms';
 import { ChevronLeft, ChevronRight, Sparkles, Calendar as CalendarIcon, Info } from 'lucide-react';
 import { minutesToTime } from '@/utils/time';
 import { motion } from 'framer-motion';
+import { format } from 'date-fns';
 
 export default function CalendarView() {
   const [selectedDate, setSelectedDate] = useAtom(selectedDateAtom);

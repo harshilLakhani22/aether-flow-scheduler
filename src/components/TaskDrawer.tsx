@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { selectedTaskAtom, isTaskModalOpenAtom, tasksAtom } from '@/atoms';
 import { Task, TaskPriority, TaskStatus, TaskType } from '@/types';
-import { calculateDuration, timeToMinutes } from '@/utils/time';
+import { calculateDuration, timeToMinutes, minutesToTime } from '@/utils/time';
 
 const PRIORITIES: { value: TaskPriority; label: string; color: string; bg: string }[] = [
   { value: 'low', label: 'Low', color: 'text-muted-foreground', bg: 'bg-muted/50 border-border/60' },
