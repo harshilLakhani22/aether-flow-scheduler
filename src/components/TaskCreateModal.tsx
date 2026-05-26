@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtom } from 'jotai';
 import { 
   isTaskCreateModalOpenAtom, tasksAtom, selectedDateAtom, 
   prefillTimeAtom 
@@ -49,7 +49,7 @@ export default function TaskCreateModal() {
   const [isOpen, setIsOpen] = useAtom(isTaskCreateModalOpenAtom);
   const [selectedDate] = useAtom(selectedDateAtom);
   const [prefillTime, setPrefillTime] = useAtom(prefillTimeAtom);
-  const setTasks = useSetAtom(tasksAtom);
+  const [tasks, setTasks] = useAtom(tasksAtom);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -164,6 +164,22 @@ export default function TaskCreateModal() {
     handleClose();
   };
 
+  const todaysTasks = tasks.filter((t) => t.date === date && t.startTime && t.endTime);
+  const HOURS = Array.from({ length: 24 }).map((_, i) => i);
+
+  // Auto-scroll timeline to 8 AM or the start time when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => {
+        const container = document.getElementById('quick-timeline-container');
+        if (container) {
+          const scrollPos = prefillTime ? timeToMinutes(prefillTime) - 60 : 8 * 60; // 8 AM or 1hr before prefill
+          container.scrollTo({ top: scrollPos, behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }, [isOpen, prefillTime]);
+
   if (!isOpen) return null;
 
   return (
@@ -182,24 +198,78 @@ export default function TaskCreateModal() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="relative w-full max-w-2xl bg-popover/95 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl overflow-hidden flex flex-col z-10 text-foreground"
+          className="relative w-full max-w-4xl bg-popover/95 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl overflow-hidden flex z-10 text-foreground h-[85vh] max-h-[800px]"
         >
-          {/* Header */}
-          <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between bg-gradient-to-r from-muted/30 to-transparent">
-            <h3 className="text-lg font-extrabold text-foreground flex items-center gap-2 tracking-tight">
-              <Sparkles size={18} className="text-primary animate-pulse-subtle" />
-              <span>Create New Task</span>
-            </h3>
-            <button
-              onClick={handleClose}
-              className="p-1.5 bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground rounded-full transition-colors"
-            >
-              <X size={16} />
-            </button>
+          {/* Left Column: Quick Timeline */}
+          <div className="w-64 md:w-80 border-r border-border/50 bg-muted/10 hidden md:flex flex-col">
+            <div className="px-5 py-4 border-b border-border/50 bg-muted/20">
+              <h3 className="text-[11px] font-extrabold text-foreground flex items-center gap-2 tracking-widest uppercase text-muted-foreground">
+                <Clock size={13} className="text-primary" />
+                <span>Quick Timeline</span>
+              </h3>
+            </div>
+            <div id="quick-timeline-container" className="flex-1 overflow-y-auto p-4 custom-scrollbar relative">
+              <div className="relative h-[1440px] w-full">
+                {/* Grid Lines */}
+                {HOURS.map((hour) => (
+                  <div key={hour} className="absolute w-full border-t border-border/40 flex items-start" style={{ top: `${hour * 60}px` }}>
+                    <span className="text-[9px] text-muted-foreground/60 font-bold -mt-2 bg-popover px-1 rounded-sm ml-1">
+                      {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+                    </span>
+                  </div>
+                ))}
+                
+                {/* Existing Tasks */}
+                {todaysTasks.map((task) => {
+                  const startMin = timeToMinutes(task.startTime!);
+                  const endMin = timeToMinutes(task.endTime!);
+                  // Handle cross midnight visually by capping at 1440 for simplicity in this view
+                  const dur = endMin < startMin ? (1440 - startMin) : (task.duration || 60);
+                  
+                  return (
+                    <div 
+                      key={task.id} 
+                      className={`absolute left-12 right-2 rounded-lg p-1.5 text-[10px] leading-tight overflow-hidden color-${task.color || 'indigo'} task-styled-block shadow-sm z-10`}
+                      style={{ top: `${startMin}px`, height: `${dur}px` }}
+                    >
+                      <div className="font-bold truncate">{task.title}</div>
+                      <div className="opacity-70 text-[9px] mt-0.5 truncate">{task.startTime} - {task.endTime}</div>
+                    </div>
+                  );
+                })}
+
+                {/* Live Preview of Task Being Created */}
+                {startTime && endTime && !timeError && (
+                  <div 
+                    className={`absolute left-12 right-2 rounded-lg p-1.5 text-[10px] leading-tight overflow-hidden color-${color} task-styled-block border-dashed border-2 opacity-90 z-20 shadow-md ring-2 ring-primary/20 animate-pulse-subtle`}
+                    style={{ top: `${timeToMinutes(startTime)}px`, height: `${estimatedDuration}px` }}
+                  >
+                    <div className="font-extrabold truncate">{title || 'New Task (Preview)'}</div>
+                    <div className="opacity-90 font-medium text-[9px] mt-0.5 truncate">{startTime} - {endTime}</div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 flex-1 overflow-y-auto space-y-6 max-h-[calc(100vh-140px)] custom-scrollbar">
-            {timeError && (
+          {/* Right Column: Form */}
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between bg-gradient-to-r from-muted/30 to-transparent">
+              <h3 className="text-lg font-extrabold text-foreground flex items-center gap-2 tracking-tight">
+                <Sparkles size={18} className="text-primary animate-pulse-subtle" />
+                <span>Create New Task</span>
+              </h3>
+              <button
+                onClick={handleClose}
+                className="p-1.5 bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground rounded-full transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 flex-1 overflow-y-auto space-y-6 custom-scrollbar">
+              {timeError && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex gap-3 text-rose-600 dark:text-rose-400 text-xs shadow-inner">
                 <AlertCircle size={15} className="shrink-0 mt-0.5" />
                 <span>{timeError}</span>
@@ -453,6 +523,7 @@ export default function TaskCreateModal() {
               </button>
             </div>
           </form>
+          </div>
         </motion.div>
       </div>
     </AnimatePresence>
