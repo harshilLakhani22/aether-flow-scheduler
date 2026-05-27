@@ -4,7 +4,8 @@ import React from 'react';
 import { useSetAtom } from 'jotai';
 import { 
   Clock, CheckSquare, Square, Folder,
-  Target, Monitor, Users, Briefcase, Megaphone, Leaf, Flame
+  Target, Monitor, Users, Briefcase, Megaphone, Leaf, Flame,
+  RotateCcw
 } from 'lucide-react';
 import { Task, TaskPriority } from '@/types';
 import { selectedTaskAtom, isTaskModalOpenAtom, tasksAtom } from '@/atoms';
@@ -39,13 +40,34 @@ export default function TaskCard({ task }: TaskCardProps) {
 
   const handleToggleComplete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setTasks((prevTasks) =>
-      prevTasks.map((t) =>
+    setTasks((prevTasks) => {
+      const updated = prevTasks.map((t) =>
         t.id === task.id
           ? { ...t, completed: !t.completed, status: !t.completed ? 'done' : 'not_started', updatedAt: new Date().toISOString() }
           : t
-      )
-    );
+      );
+      localStorage.setItem('task-tracker-tasks', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleRestoreToToday = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+
+    setTasks((prevTasks) => {
+      const updated = prevTasks.map((t) =>
+        t.id === task.id
+          ? { ...t, date: todayStr, updatedAt: new Date().toISOString() }
+          : t
+      );
+      localStorage.setItem('task-tracker-tasks', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleCardClick = () => {
@@ -72,6 +94,12 @@ export default function TaskCard({ task }: TaskCardProps) {
   const TypeIcon = TASK_TYPE_ICONS[task.type] || Target;
   const colorClass = `color-${task.color || 'indigo'}`;
 
+  // Determine if task is from a past date and not completed
+  const d = new Date();
+  const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const isPast = task.date < todayStr;
+  const showRestore = isPast && !task.completed;
+
   return (
     <motion.div
       layout
@@ -87,10 +115,10 @@ export default function TaskCard({ task }: TaskCardProps) {
       onClick={handleCardClick}
       className={`group relative glass-card flex flex-col p-3.5 rounded-xl cursor-grab active:cursor-grabbing border-l-[4px] border border-r-border/80 border-y-border/80 task-styled-block ${colorClass} ${
         task.priority === 'urgent' ? 'priority-urgent-glow' : ''
-      } ${task.completed ? 'opacity-60 saturate-50' : 'shadow-sm hover:shadow-md'}`}
+      } ${task.completed ? 'opacity-60 saturate-50' : 'shadow-sm hover:shadow-md'} overflow-hidden`}
     >
       {/* Header Row */}
-      <div className="flex items-start gap-2.5 w-full">
+      <div className="flex items-start gap-2.5 w-full relative z-10">
         <button
           type="button"
           onClick={handleToggleComplete}
@@ -116,14 +144,14 @@ export default function TaskCard({ task }: TaskCardProps) {
 
       {/* Description */}
       {task.description && (
-        <p className="opacity-75 text-xs line-clamp-2 leading-relaxed font-medium pl-[26px] mt-1">
+        <p className="opacity-75 text-xs line-clamp-2 leading-relaxed font-medium pl-[26px] mt-1 relative z-10">
           {task.description}
         </p>
       )}
 
       {/* Tags */}
       {task.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 pl-[26px] mt-2.5">
+        <div className="flex flex-wrap gap-1.5 pl-[26px] mt-2.5 relative z-10">
           {task.tags.map((tag, idx) => {
             if (idx > 2) return null;
             return (
@@ -144,7 +172,7 @@ export default function TaskCard({ task }: TaskCardProps) {
       )}
 
       {/* Footer */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-current/15 pt-2.5 mt-3 text-[11px] font-bold pl-[26px] opacity-90">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-current/15 pt-2.5 mt-3 text-[11px] font-bold pl-[26px] opacity-90 relative z-10">
         <div className="flex flex-wrap items-center gap-1.5 min-w-0">
           {task.project && (
             <span className="flex items-center gap-1 text-[10px] bg-current/10 px-2 py-0.5 border border-current/20 rounded truncate max-w-[100px]">
@@ -172,6 +200,28 @@ export default function TaskCard({ task }: TaskCardProps) {
           {priorityStyle.label}
         </span>
       </div>
+
+      {/* Restore to Today Button (Visible for Past Uncompleted Tasks) */}
+      {showRestore && (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-3 pl-[26px] relative z-10"
+        >
+          <button
+            onClick={handleRestoreToToday}
+            className="w-full group/btn flex items-center justify-between gap-2 bg-current/10 hover:bg-current/20 border border-current/20 transition-all duration-300 py-2 px-3 rounded-lg text-xs font-bold"
+          >
+            <span className="flex items-center gap-1.5 opacity-90">
+              <RotateCcw size={13} className="group-hover/btn:-rotate-45 transition-transform duration-300" />
+              RESTORE TO TODAY
+            </span>
+            <span className="text-[9px] uppercase tracking-widest opacity-60 font-mono">
+              from {new Date(task.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </span>
+          </button>
+        </motion.div>
+      )}
     </motion.div>
   );
 }
