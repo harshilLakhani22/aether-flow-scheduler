@@ -22,8 +22,8 @@ export default function TaskBoard() {
   const [, setTasks] = useAtom(tasksAtom);
   const setIsCreateOpen = useSetAtom(isTaskCreateModalOpenAtom);
 
-  // Keep track of which column is currently a drag-over target
   const [dragOverCol, setDragOverCol] = useState<TaskStatus | null>(null);
+  const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
 
   const COLUMNS: Column[] = [
     {
@@ -40,7 +40,6 @@ export default function TaskBoard() {
       icon: <Flame size={14} className="text-indigo-500" />,
       borderGlow: 'border-indigo-500 dark:border-indigo-850 bg-indigo-500/10 dark:bg-indigo-950/20',
     },
-
     {
       id: 'done',
       title: 'Done',
@@ -50,40 +49,77 @@ export default function TaskBoard() {
     },
   ];
 
-  // HTML5 Drop Event Handler
-  const handleDrop = (e: React.DragEvent, columnId: TaskStatus) => {
+  // HTML5 Drop Event Handler (Column level - appends to end)
+  const handleDropColumn = (e: React.DragEvent, columnId: TaskStatus) => {
     e.preventDefault();
     setDragOverCol(null);
+    setDragOverTaskId(null);
     
     const taskId = e.dataTransfer.getData('text/plain');
     if (!taskId) return;
 
-    // Find and update the task's status
-    setTasks((prevTasks) =>
-      prevTasks.map((t) => {
-        if (t.id === taskId) {
-          // If task is completed and moved to "done", set completed: true.
-          // If moved away from "done", set completed: false.
-          const isDone = columnId === 'done';
-          return {
-            ...t,
-            status: columnId,
-            completed: isDone,
-            updatedAt: new Date().toISOString(),
-          };
-        }
-        return t;
-      })
-    );
+    setTasks((prevTasks) => {
+      const draggedTaskIdx = prevTasks.findIndex(t => t.id === taskId);
+      if (draggedTaskIdx === -1) return prevTasks;
+
+      const newTasks = [...prevTasks];
+      const [draggedTask] = newTasks.splice(draggedTaskIdx, 1);
+      
+      draggedTask.status = columnId;
+      draggedTask.completed = columnId === 'done';
+      draggedTask.updatedAt = new Date().toISOString();
+      
+      newTasks.push(draggedTask);
+      localStorage.setItem('task-tracker-tasks', JSON.stringify(newTasks));
+      return newTasks;
+    });
   };
 
-  const handleDragOver = (e: React.DragEvent, columnId: TaskStatus) => {
+  // HTML5 Drop Event Handler (Task level - inserts before target)
+  const handleDropTask = (e: React.DragEvent, targetTaskId: string, columnId: TaskStatus) => {
+    e.preventDefault();
+    e.stopPropagation(); // prevent column drop
+    setDragOverCol(null);
+    setDragOverTaskId(null);
+    
+    const draggedTaskId = e.dataTransfer.getData('text/plain');
+    if (!draggedTaskId || draggedTaskId === targetTaskId) return;
+
+    setTasks((prevTasks) => {
+      const draggedTaskIdx = prevTasks.findIndex(t => t.id === draggedTaskId);
+      if (draggedTaskIdx === -1) return prevTasks;
+      
+      const newTasks = [...prevTasks];
+      const [draggedTask] = newTasks.splice(draggedTaskIdx, 1);
+      
+      draggedTask.status = columnId;
+      draggedTask.completed = columnId === 'done';
+      draggedTask.updatedAt = new Date().toISOString();
+      
+      const adjustedTargetIdx = newTasks.findIndex(t => t.id === targetTaskId);
+      
+      // Determine if dropping on top half or bottom half could improve this, but for now simple insert before
+      newTasks.splice(adjustedTargetIdx, 0, draggedTask);
+      
+      localStorage.setItem('task-tracker-tasks', JSON.stringify(newTasks));
+      return newTasks;
+    });
+  };
+
+  const handleDragOverColumn = (e: React.DragEvent, columnId: TaskStatus) => {
     e.preventDefault();
     setDragOverCol(columnId);
   };
 
+  const handleDragOverTask = (e: React.DragEvent, taskId: string) => {
+    e.preventDefault();
+    e.stopPropagation(); // prevent column highlight
+    setDragOverTaskId(taskId);
+  };
+
   const handleDragLeave = () => {
     setDragOverCol(null);
+    setDragOverTaskId(null);
   };
 
   const getColTasks = (colId: TaskStatus) => {
@@ -104,15 +140,15 @@ export default function TaskBoard() {
         return (
           <div
             key={column.id}
-            onDragOver={(e) => handleDragOver(e, column.id)}
+            onDragOver={(e) => handleDragOverColumn(e, column.id)}
             onDragLeave={handleDragLeave}
-            onDrop={(e) => handleDrop(e, column.id)}
+            onDrop={(e) => handleDropColumn(e, column.id)}
             className={`flex flex-col h-full min-h-[500px] rounded-xl border border-dashed p-4 transition-all duration-300 ${
               isTarget ? column.borderGlow : 'border-border bg-card/30'
             }`}
           >
             {/* Column Header */}
-            <div className="flex items-center justify-between mb-4 shrink-0">
+            <div className="flex items-center justify-between mb-4 shrink-0 pointer-events-none">
               <div className="flex items-center gap-2">
                 <span className="p-1 rounded bg-muted border border-border">
                   {column.icon}
@@ -125,8 +161,8 @@ export default function TaskBoard() {
                 </span>
               </div>
               <button
-                onClick={() => setIsCreateOpen(true)}
-                className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+                onClick={(e) => { e.stopPropagation(); setIsCreateOpen(true); }}
+                className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors pointer-events-auto"
                 title="Add task to this state"
               >
                 <Plus size={14} />
@@ -137,13 +173,24 @@ export default function TaskBoard() {
             <div className="flex-1 overflow-y-auto space-y-3.5 pr-1 custom-scrollbar">
               <AnimatePresence>
                 {colTasks.length > 0 ? (
-                  colTasks.map((task) => <TaskCard key={task.id} task={task} />)
+                  colTasks.map((task) => (
+                    <div
+                      key={task.id}
+                      onDragOver={(e) => handleDragOverTask(e, task.id)}
+                      onDrop={(e) => handleDropTask(e, task.id, column.id)}
+                      className={`transition-all duration-200 rounded-xl ${
+                        dragOverTaskId === task.id ? 'mt-12 pt-2 border-t-2 border-primary/50' : ''
+                      }`}
+                    >
+                      <TaskCard task={task} />
+                    </div>
+                  ))
                 ) : (
                   <motion.div 
                     initial={{ opacity: 0 }} 
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="flex flex-col items-center justify-center py-12 px-4 border border-dashed border-border/60 bg-background/30 rounded-xl text-muted-foreground text-center select-none h-40"
+                    className="flex flex-col items-center justify-center py-12 px-4 border border-dashed border-border/60 bg-background/30 rounded-xl text-muted-foreground text-center select-none h-40 pointer-events-none"
                   >
                     <HelpCircle size={20} className="stroke-[1.5] mb-2 opacity-40" />
                     <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/80">Empty State</p>
