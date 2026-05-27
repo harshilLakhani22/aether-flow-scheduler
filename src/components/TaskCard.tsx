@@ -7,7 +7,7 @@ import {
   Target, Monitor, Users, Briefcase, Megaphone, Leaf, Flame,
   RotateCcw
 } from 'lucide-react';
-import { Task, TaskPriority } from '@/types';
+import { Task, TaskPriority, TaskStatus } from '@/types';
 import { selectedTaskAtom, isTaskModalOpenAtom, tasksAtom } from '@/atoms';
 import { formatTime12h } from '@/utils/time';
 import { motion } from 'framer-motion';
@@ -43,7 +43,7 @@ export default function TaskCard({ task }: TaskCardProps) {
     setTasks((prevTasks) => {
       const updated = prevTasks.map((t) =>
         t.id === task.id
-          ? { ...t, completed: !t.completed, status: !t.completed ? 'done' : 'not_started', updatedAt: new Date().toISOString() }
+          ? { ...t, completed: !t.completed, status: (!t.completed ? 'done' : 'not_started') as TaskStatus, updatedAt: new Date().toISOString() }
           : t
       );
       localStorage.setItem('task-tracker-tasks', JSON.stringify(updated));
