@@ -17,7 +17,9 @@ import CalendarView from './CalendarView';
 import ListView from './ListView';
 import TaskDrawer from './TaskDrawer';
 import TaskCreateModal from './TaskCreateModal';
+import BottomNav from './BottomNav';
 import { AnimatePresence, motion } from 'framer-motion';
+import { taskService } from '@/lib/taskService';
 
 export default function AppShell() {
   const [theme] = useAtom(themeAtom);
@@ -27,30 +29,16 @@ export default function AppShell() {
   const setIsCreateOpen = useSetAtom(isTaskCreateModalOpenAtom);
   const setIsDrawerOpen = useSetAtom(isTaskModalOpenAtom);
 
-  // 1. Client-Side Hydration on Mount
+  // 1. Client-Side Hydration & Real-time Sync from Firebase
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('task-tracker-tasks');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setTasks(parsed);
-          }
-        } catch (e) {
-          console.error('Failed to parse localStorage tasks:', e);
-        }
-      }
-      setIsLoaded(true);
+      const unsubscribe = taskService.subscribeToTasks((fetchedTasks) => {
+        setTasks(fetchedTasks);
+        setIsLoaded(true);
+      });
+      return () => unsubscribe();
     }
   }, [setTasks, setIsLoaded]);
-
-  // 2. Sync State changes to LocalStorage
-  useEffect(() => {
-    if (isLoaded && typeof window !== 'undefined') {
-      localStorage.setItem('task-tracker-tasks', JSON.stringify(tasks));
-    }
-  }, [tasks, isLoaded]);
 
   // 3. Global Keyboard Shortcuts
   useEffect(() => {
@@ -138,9 +126,11 @@ export default function AppShell() {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
+    <div className="flex flex-col md:flex-row h-screen w-screen overflow-hidden bg-background text-foreground">
       {/* Sidebar Panel Left */}
-      <Sidebar />
+      <div className="hidden md:flex">
+        <Sidebar />
+      </div>
 
       {/* Main Container Right */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
@@ -148,7 +138,7 @@ export default function AppShell() {
         <Topbar />
 
         {/* Dynamic Inner Layout Body */}
-        <div className="flex-1 overflow-y-auto p-6 flex flex-col min-h-0">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-6 flex flex-col min-h-0">
           {/* Core Panel Content views */}
           <div className="flex-1 min-h-0 relative">
             <AnimatePresence mode="wait">
@@ -170,6 +160,11 @@ export default function AppShell() {
       {/* Edit Drawer and Creator Dialogs */}
       <TaskDrawer />
       <TaskCreateModal />
+
+      {/* Bottom Navigation (Visible only on Mobile) */}
+      <div className="md:hidden">
+        <BottomNav />
+      </div>
     </div>
   );
 }

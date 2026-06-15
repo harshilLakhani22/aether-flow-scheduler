@@ -162,7 +162,7 @@ export default function Topbar() {
         {/* Quick Add button */}
         <button
           onClick={() => setIsCreateOpen(true)}
-          className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground py-1.5 px-4 rounded-lg text-xs font-bold transition-all focus:outline-none active:scale-95 shadow-sm"
+          className="hidden md:flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground py-1.5 px-4 rounded-lg text-xs font-bold transition-all focus:outline-none active:scale-95 shadow-sm"
         >
           <Plus size={14} className="stroke-[2.5]" />
           <span>New Task</span>

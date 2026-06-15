@@ -95,7 +95,7 @@ export default function CalendarView() {
   const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className="glass-panel border border-border rounded-xl p-6 flex flex-col h-[calc(100vh-210px)] overflow-hidden">
+    <div className="glass-panel border border-border rounded-xl p-3 md:p-6 flex flex-col h-[calc(100vh-160px)] lg:h-[calc(100vh-210px)] overflow-hidden">
       {/* Calendar Header info */}
       <div className="flex items-center justify-between border-b border-border pb-4 mb-4 shrink-0">
         <div className="flex items-center gap-2">
@@ -126,15 +126,15 @@ export default function CalendarView() {
       </div>
  
       {/* Weekday Labels Grid */}
-      <div className="grid grid-cols-7 gap-3 mb-2 text-center text-xs font-bold uppercase tracking-wider text-muted-foreground shrink-0">
+      <div className="grid grid-cols-7 gap-1 sm:gap-3 mb-2 text-center text-[9px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground shrink-0">
         {DAYS_OF_WEEK.map((d) => (
-          <div key={d} className="py-2">{d}</div>
+          <div key={d} className="py-2"><span className="sm:hidden">{d.charAt(0)}</span><span className="hidden sm:inline">{d}</span></div>
         ))}
       </div>
  
       {/* Days Grid Scrollable area */}
       <div className="flex-1 overflow-y-auto min-h-0 pr-1">
-        <div className="grid grid-cols-7 gap-3 pb-4">
+        <div className="grid grid-cols-7 gap-1 sm:gap-3 pb-4">
           {calendarDays.map((day, idx) => {
             if (day === null) {
               return (
@@ -143,7 +143,7 @@ export default function CalendarView() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.2, delay: idx * 0.01 }}
-                  className="aspect-video sm:aspect-square bg-muted/20 border border-border/50 rounded-xl animate-pulse-subtle"
+                  className="min-h-[70px] sm:min-h-0 sm:aspect-square bg-muted/20 border border-border/50 rounded-xl animate-pulse-subtle"
                 />
               );
             }
@@ -175,7 +175,7 @@ export default function CalendarView() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2, delay: idx * 0.01 }}
                 onClick={() => handleDateClick(day)}
-                className={`aspect-video sm:aspect-square border rounded-xl p-2.5 flex flex-col justify-between cursor-pointer transition-all ${loadBg} ${
+                className={`min-h-[70px] sm:min-h-0 sm:aspect-square border rounded-xl p-1.5 sm:p-2.5 flex flex-col justify-between cursor-pointer transition-all ${loadBg} ${
                   isSelected
                     ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.02]'
                     : isToday
@@ -198,8 +198,8 @@ export default function CalendarView() {
                   </span>
 
                   {stats.tasksCount > 0 && (
-                    <span className="text-[9px] px-1.5 bg-muted text-muted-foreground font-bold border border-border rounded">
-                      {stats.tasksCount} Tasks
+                    <span className="text-[8px] sm:text-[9px] px-1 sm:px-1.5 bg-muted text-muted-foreground font-bold border border-border rounded">
+                      {stats.tasksCount} <span className="hidden sm:inline">Tasks</span>
                     </span>
                   )}
                 </div>
@@ -208,13 +208,13 @@ export default function CalendarView() {
                 {stats.tasksCount > 0 ? (
                   <div className="flex flex-col gap-1 items-start mt-auto">
                     {stats.totalHours > 0 && (
-                      <span className={`text-[8px] px-1.5 py-0.5 rounded border font-semibold tracking-wide uppercase ${loadBadgeColor}`}>
-                        {stats.totalHours} hrs planned
+                      <span className={`text-[7px] sm:text-[8px] px-1 sm:px-1.5 py-0.5 rounded border font-semibold tracking-wide uppercase ${loadBadgeColor}`}>
+                        {stats.totalHours} <span className="hidden sm:inline">hrs planned</span><span className="sm:hidden">h</span>
                       </span>
                     )}
                     {stats.completedCount > 0 && (
-                      <span className="text-[8px] text-emerald-500/80 font-medium">
-                        ✓ {stats.completedCount} completed
+                      <span className="text-[7px] sm:text-[8px] text-emerald-500/80 font-medium">
+                        ✓ {stats.completedCount} <span className="hidden sm:inline">completed</span>
                       </span>
                     )}
                   </div>
@@ -230,7 +230,7 @@ export default function CalendarView() {
       </div>
       
       {/* Calendar Legend */}
-      <div className="shrink-0 pt-3 border-t border-border mt-3 flex items-center justify-center gap-6 text-[10px] text-slate-400 font-medium">
+      <div className="shrink-0 pt-3 border-t border-border mt-3 flex flex-wrap items-center justify-center gap-2 sm:gap-6 text-[9px] sm:text-[10px] text-slate-400 font-medium">
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded bg-slate-950 border border-slate-900" />
           <span>No Scheduled Focus</span>

@@ -14,6 +14,7 @@ import {
   Users, Briefcase, Megaphone, Leaf, Flame
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { taskService } from '@/lib/taskService';
 
 const PRIORITIES: { value: TaskPriority; label: string; color: string; bg: string }[] = [
   { value: 'low', label: 'Low', color: 'text-muted-foreground', bg: 'bg-muted/50 border-border' },
@@ -127,7 +128,7 @@ export default function TaskCreateModal() {
     else if (newType === 'urgent') setColor('rose');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (timeError) return;
 
@@ -156,11 +157,7 @@ export default function TaskCreateModal() {
       updatedAt: new Date().toISOString(),
     };
 
-    setTasks((prev) => {
-      const updated = [...prev, newTask];
-      localStorage.setItem('task-tracker-tasks', JSON.stringify(updated));
-      return updated;
-    });
+    await taskService.addTask(newTask);
     handleClose();
   };
 

@@ -12,6 +12,7 @@ import {
 import { selectedTaskAtom, isTaskModalOpenAtom, tasksAtom } from '@/atoms';
 import { Task, TaskPriority, TaskStatus, TaskType } from '@/types';
 import { calculateDuration, timeToMinutes, minutesToTime } from '@/utils/time';
+import { taskService } from '@/lib/taskService';
 
 const PRIORITIES: { value: TaskPriority; label: string; color: string; bg: string }[] = [
   { value: 'low', label: 'Low', color: 'text-muted-foreground', bg: 'bg-muted/50 border-border/60' },
@@ -53,7 +54,7 @@ const COLORS = [
 export default function TaskDrawer() {
   const [selectedTask, setSelectedTask] = useAtom(selectedTaskAtom);
   const [isOpen, setIsOpen] = useAtom(isTaskModalOpenAtom);
-  const [tasks, setTasks] = useAtom(tasksAtom);
+  const [tasks] = useAtom(tasksAtom);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -137,7 +138,7 @@ export default function TaskDrawer() {
 
   if (!selectedTask) return null;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim()) return;
 
     let finalStart = startTime || undefined;
@@ -175,20 +176,20 @@ export default function TaskDrawer() {
       updatedAt: new Date().toISOString(),
     };
 
-    setTasks(tasks.map((t) => (t.id === selectedTask.id ? updatedTask : t)));
+    await taskService.updateTask(selectedTask.id, updatedTask);
     setSelectedTask(updatedTask);
     setIsOpen(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (confirm('Are you sure you want to delete this task?')) {
-      setTasks(tasks.filter((t) => t.id !== selectedTask.id));
+      await taskService.deleteTask(selectedTask.id);
       setIsOpen(false);
       setSelectedTask(null);
     }
   };
 
-  const handleDuplicate = () => {
+  const handleDuplicate = async () => {
     const duplicatedTask: Task = {
       ...selectedTask,
       id: `task-dup-${Date.now()}`,
@@ -198,7 +199,7 @@ export default function TaskDrawer() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    setTasks([...tasks, duplicatedTask]);
+    await taskService.addTask(duplicatedTask);
     setIsOpen(false);
     setSelectedTask(null);
   };

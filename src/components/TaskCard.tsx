@@ -8,8 +8,9 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { Task, TaskPriority, TaskStatus } from '@/types';
-import { selectedTaskAtom, isTaskModalOpenAtom, tasksAtom } from '@/atoms';
+import { selectedTaskAtom, isTaskModalOpenAtom } from '@/atoms';
 import { formatTime12h } from '@/utils/time';
+import { taskService } from '@/lib/taskService';
 import { motion } from 'framer-motion';
 
 interface TaskCardProps {
@@ -36,22 +37,16 @@ const TASK_TYPE_ICONS: Record<string, React.ElementType> = {
 export default function TaskCard({ task }: TaskCardProps) {
   const setSelectedTask = useSetAtom(selectedTaskAtom);
   const setIsDrawerOpen = useSetAtom(isTaskModalOpenAtom);
-  const setTasks = useSetAtom(tasksAtom);
 
-  const handleToggleComplete = (e: React.MouseEvent) => {
+  const handleToggleComplete = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setTasks((prevTasks) => {
-      const updated = prevTasks.map((t) =>
-        t.id === task.id
-          ? { ...t, completed: !t.completed, status: (!t.completed ? 'done' : 'not_started') as TaskStatus, updatedAt: new Date().toISOString() }
-          : t
-      );
-      localStorage.setItem('task-tracker-tasks', JSON.stringify(updated));
-      return updated;
+    await taskService.updateTask(task.id, {
+      completed: !task.completed,
+      status: !task.completed ? 'done' : 'not_started'
     });
   };
 
-  const handleRestoreToToday = (e: React.MouseEvent) => {
+  const handleRestoreToToday = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const d = new Date();
     const year = d.getFullYear();
@@ -59,15 +54,7 @@ export default function TaskCard({ task }: TaskCardProps) {
     const day = String(d.getDate()).padStart(2, '0');
     const todayStr = `${year}-${month}-${day}`;
 
-    setTasks((prevTasks) => {
-      const updated = prevTasks.map((t) =>
-        t.id === task.id
-          ? { ...t, date: todayStr, updatedAt: new Date().toISOString() }
-          : t
-      );
-      localStorage.setItem('task-tracker-tasks', JSON.stringify(updated));
-      return updated;
-    });
+    await taskService.updateTask(task.id, { date: todayStr });
   };
 
   const handleCardClick = () => {

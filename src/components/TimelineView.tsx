@@ -16,6 +16,7 @@ import {
   Inbox, Sparkles, CheckSquare, Square, ArrowUpRight
 } from 'lucide-react';
 import TimelineMinimap from './TimelineMinimap';
+import { taskService } from '@/lib/taskService';
 
 const HOUR_HEIGHT = 96; // 96px per hour for a spacious, readable scrolling timeline
 const MINUTES_PER_SLOT = 30; // 30-minute drop zones
@@ -130,20 +131,12 @@ export default function TimelineView() {
   const slots = Array.from({ length: 48 }, (_, i) => i);
 
   // Toggle complete state handler
-  const handleToggleComplete = (e: React.MouseEvent, task: Task) => {
+  const handleToggleComplete = async (e: React.MouseEvent, task: Task) => {
     e.stopPropagation();
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === task.id
-          ? {
-              ...t,
-              completed: !t.completed,
-              status: !t.completed ? 'done' : 'in_progress',
-              updatedAt: new Date().toISOString(),
-            }
-          : t
-      )
-    );
+    await taskService.updateTask(task.id, {
+      completed: !task.completed,
+      status: !task.completed ? 'done' : 'in_progress',
+    });
   };
 
   const handleTaskClick = (task: Task) => {
@@ -161,7 +154,7 @@ export default function TimelineView() {
     setDragOverSlot(null);
   };
 
-  const handleSlotDrop = (e: React.DragEvent, slotIdx: number) => {
+  const handleSlotDrop = async (e: React.DragEvent, slotIdx: number) => {
     e.preventDefault();
     setDragOverSlot(null);
     const taskId = e.dataTransfer.getData('text/plain');
@@ -170,27 +163,19 @@ export default function TimelineView() {
     const startMinutes = slotIdx * MINUTES_PER_SLOT;
     const startTimeStr = minutesToTime(startMinutes);
 
-    setTasks((prevTasks) => {
-      const taskToMove = prevTasks.find((t) => t.id === taskId);
-      if (!taskToMove) return prevTasks;
+    const taskToMove = tasks.find((t) => t.id === taskId);
+    if (!taskToMove) return;
 
-      // Keep original duration or default to 60m
-      const dur = taskToMove.duration || taskToMove.estimatedDuration || 60;
-      const endMinutes = Math.min(1439, startMinutes + dur);
-      const endTimeStr = minutesToTime(endMinutes);
+    // Keep original duration or default to 60m
+    const dur = taskToMove.duration || taskToMove.estimatedDuration || 60;
+    const endMinutes = Math.min(1439, startMinutes + dur);
+    const endTimeStr = minutesToTime(endMinutes);
 
-      return prevTasks.map((t) =>
-        t.id === taskId
-          ? {
-              ...t,
-              startTime: startTimeStr,
-              endTime: endTimeStr,
-              duration: dur,
-              estimatedDuration: dur,
-              updatedAt: new Date().toISOString(),
-            }
-          : t
-      );
+    await taskService.updateTask(taskId, {
+      startTime: startTimeStr,
+      endTime: endTimeStr,
+      duration: dur,
+      estimatedDuration: dur,
     });
   };
 
@@ -209,6 +194,8 @@ export default function TimelineView() {
     const startMin = timeToMinutes(task.startTime!);
     const originalEndMin = timeToMinutes(task.endTime!);
     const originalDuration = originalEndMin - startMin;
+    
+    let finalData: { endTime: string; duration: number } | null = null;
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const deltaY = moveEvent.clientY - startY;
@@ -223,6 +210,8 @@ export default function TimelineView() {
       const computedDuration = cappedEndMinutes - startMin;
       
       const newEndTime = minutesToTime(cappedEndMinutes);
+      
+      finalData = { endTime: newEndTime, duration: computedDuration };
 
       setTasks((prevTasks) =>
         prevTasks.map((t) =>
@@ -239,10 +228,18 @@ export default function TimelineView() {
       );
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = async () => {
       setResizingTaskId(null);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      
+      if (finalData) {
+        await taskService.updateTask(task.id, {
+          endTime: finalData.endTime,
+          duration: finalData.duration,
+          estimatedDuration: finalData.duration
+        });
+      }
     };
 
     setResizingTaskId(task.id);
@@ -271,7 +268,7 @@ export default function TimelineView() {
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-full select-none text-foreground bg-background">
       {/* 1. Left Section: Vertical scrollable timeline calendar */}
-      <div className="flex-1 glass-panel border border-border rounded-xl flex flex-col h-[calc(100vh-210px)] overflow-hidden bg-card">
+      <div className="flex-1 glass-panel border border-border rounded-xl flex flex-col h-[65vh] lg:h-[calc(100vh-210px)] overflow-hidden bg-card">
         <TimelineMinimap 
           onTaskClick={(task, startMin) => {
             if (timelineScrollRef.current) {
@@ -286,7 +283,7 @@ export default function TimelineView() {
         {/* Outer Scroll Container */}
         <div
           ref={timelineScrollRef}
-          className="flex-1 overflow-y-auto overflow-x-hidden relative"
+          className="flex-1 overflow-y-auto overflow-x-auto md:overflow-x-hidden relative"
         >
           {/* Time columns layout */}
           <div className="flex w-full min-w-[600px] relative" style={{ height: 24 * HOUR_HEIGHT }}>
@@ -544,7 +541,7 @@ export default function TimelineView() {
       </div>
 
       {/* 2. Collapsible Unscheduled Tasks Inbox sidebar */}
-      <div className="w-full lg:w-[280px] shrink-0 glass-panel border border-border rounded-xl flex flex-col h-[calc(100vh-210px)] overflow-hidden bg-card">
+      <div className="w-full lg:w-[280px] shrink-0 glass-panel border border-border rounded-xl flex flex-col h-[40vh] lg:h-[calc(100vh-210px)] overflow-hidden bg-card">
         {/* Header */}
         <div className="p-4 border-b border-border bg-muted/40 shrink-0 flex items-center justify-between">
           <div className="flex items-center gap-2">

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useAtom, useSetAtom } from 'jotai';
 import { filteredTasksAtom, tasksAtom, selectedTaskAtom, isTaskModalOpenAtom } from '@/atoms';
 import { Task, TaskPriority, TaskStatus, TaskType } from '@/types';
+import { taskService } from '@/lib/taskService';
 import { 
   ArrowUpDown, Clock, Folder, Trash2, Copy, 
   HelpCircle, CheckSquare, Square, Eye, Sparkles 
@@ -45,30 +46,22 @@ export default function ListView() {
   const [sortKey, setSortKey] = useState<SortKey>('priority');
   const [sortAsc, setSortAsc] = useState(false);
 
-  const handleToggleComplete = (e: React.MouseEvent, task: Task) => {
+  const handleToggleComplete = async (e: React.MouseEvent, task: Task) => {
     e.stopPropagation();
-    setTasks((prevTasks) =>
-      prevTasks.map((t) =>
-        t.id === task.id
-          ? { 
-              ...t, 
-              completed: !t.completed, 
-              status: !t.completed ? 'done' : 'not_started', 
-              updatedAt: new Date().toISOString() 
-            }
-          : t
-      )
-    );
+    await taskService.updateTask(task.id, {
+      completed: !task.completed,
+      status: !task.completed ? 'done' : 'not_started'
+    });
   };
 
-  const handleDelete = (e: React.MouseEvent, taskId: string) => {
+  const handleDelete = async (e: React.MouseEvent, taskId: string) => {
     e.stopPropagation();
     if (confirm('Are you sure you want to delete this task?')) {
-      setTasks(tasks.filter((t) => t.id !== taskId));
+      await taskService.deleteTask(taskId);
     }
   };
 
-  const handleDuplicate = (e: React.MouseEvent, task: Task) => {
+  const handleDuplicate = async (e: React.MouseEvent, task: Task) => {
     e.stopPropagation();
     const duplicated: Task = {
       ...task,
@@ -79,7 +72,7 @@ export default function ListView() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    setTasks([...tasks, duplicated]);
+    await taskService.addTask(duplicated);
   };
 
   const handleRowClick = (task: Task) => {
@@ -144,7 +137,7 @@ export default function ListView() {
   };
 
   return (
-    <div className="glass-panel border border-border rounded-xl flex flex-col h-[calc(100vh-210px)] overflow-hidden bg-card text-foreground">
+    <div className="glass-panel border border-border rounded-xl flex flex-col h-[calc(100vh-160px)] lg:h-[calc(100vh-210px)] overflow-hidden bg-card text-foreground">
       {/* Sub-header info */}
       <div className="p-3.5 border-b border-border bg-muted/20 flex items-center justify-between text-xs text-muted-foreground font-semibold shrink-0">
         <div className="flex items-center gap-2">
@@ -275,7 +268,7 @@ export default function ListView() {
 
                     {/* 7. Actions */}
                     <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => handleRowClick(task)}
                           className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"

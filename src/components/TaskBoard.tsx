@@ -8,6 +8,7 @@ import { filteredTasksAtom, tasksAtom, isTaskCreateModalOpenAtom } from '@/atoms
 import { TaskStatus } from '@/types';
 import TaskCard from './TaskCard';
 import TimelineMinimap from './TimelineMinimap';
+import { taskService } from '@/lib/taskService';
 
 interface Column {
   id: TaskStatus;
@@ -19,7 +20,7 @@ interface Column {
 
 export default function TaskBoard() {
   const [filteredTasks] = useAtom(filteredTasksAtom);
-  const [, setTasks] = useAtom(tasksAtom);
+  const [tasks, setTasks] = useAtom(tasksAtom);
   const setIsCreateOpen = useSetAtom(isTaskCreateModalOpenAtom);
 
   const [dragOverCol, setDragOverCol] = useState<TaskStatus | null>(null);
@@ -50,7 +51,7 @@ export default function TaskBoard() {
   ];
 
   // HTML5 Drop Event Handler (Column level - appends to end)
-  const handleDropColumn = (e: React.DragEvent, columnId: TaskStatus) => {
+  const handleDropColumn = async (e: React.DragEvent, columnId: TaskStatus) => {
     e.preventDefault();
     setDragOverCol(null);
     setDragOverTaskId(null);
@@ -58,20 +59,12 @@ export default function TaskBoard() {
     const taskId = e.dataTransfer.getData('text/plain');
     if (!taskId) return;
 
-    setTasks((prevTasks) => {
-      const draggedTaskIdx = prevTasks.findIndex(t => t.id === taskId);
-      if (draggedTaskIdx === -1) return prevTasks;
+    const draggedTask = tasks.find(t => t.id === taskId);
+    if (!draggedTask) return;
 
-      const newTasks = [...prevTasks];
-      const [draggedTask] = newTasks.splice(draggedTaskIdx, 1);
-      
-      draggedTask.status = columnId;
-      draggedTask.completed = columnId === 'done';
-      draggedTask.updatedAt = new Date().toISOString();
-      
-      newTasks.push(draggedTask);
-      localStorage.setItem('task-tracker-tasks', JSON.stringify(newTasks));
-      return newTasks;
+    await taskService.updateTask(taskId, {
+      status: columnId,
+      completed: columnId === 'done',
     });
   };
 
@@ -85,24 +78,9 @@ export default function TaskBoard() {
     const draggedTaskId = e.dataTransfer.getData('text/plain');
     if (!draggedTaskId || draggedTaskId === targetTaskId) return;
 
-    setTasks((prevTasks) => {
-      const draggedTaskIdx = prevTasks.findIndex(t => t.id === draggedTaskId);
-      if (draggedTaskIdx === -1) return prevTasks;
-      
-      const newTasks = [...prevTasks];
-      const [draggedTask] = newTasks.splice(draggedTaskIdx, 1);
-      
-      draggedTask.status = columnId;
-      draggedTask.completed = columnId === 'done';
-      draggedTask.updatedAt = new Date().toISOString();
-      
-      const adjustedTargetIdx = newTasks.findIndex(t => t.id === targetTaskId);
-      
-      // Determine if dropping on top half or bottom half could improve this, but for now simple insert before
-      newTasks.splice(adjustedTargetIdx, 0, draggedTask);
-      
-      localStorage.setItem('task-tracker-tasks', JSON.stringify(newTasks));
-      return newTasks;
+    taskService.updateTask(draggedTaskId, {
+      status: columnId,
+      completed: columnId === 'done',
     });
   };
 
@@ -132,7 +110,7 @@ export default function TaskBoard() {
         <TimelineMinimap className="border-b-0 bg-transparent" />
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 flex-1 overflow-x-auto pb-4">
+      <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-5 flex-1 overflow-x-auto pb-4 snap-x snap-mandatory px-4 md:px-0">
         {COLUMNS.map((column) => {
         const colTasks = getColTasks(column.id);
         const isTarget = dragOverCol === column.id;
@@ -143,7 +121,7 @@ export default function TaskBoard() {
             onDragOver={(e) => handleDragOverColumn(e, column.id)}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDropColumn(e, column.id)}
-            className={`flex flex-col h-full min-h-[500px] rounded-xl border border-dashed p-4 transition-all duration-300 ${
+            className={`flex flex-col h-[calc(100vh-250px)] md:h-full md:min-h-[500px] w-[85vw] md:w-auto shrink-0 snap-center rounded-xl border border-dashed p-4 transition-all duration-300 ${
               isTarget ? column.borderGlow : 'border-border bg-card/30'
             }`}
           >

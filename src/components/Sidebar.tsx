@@ -11,12 +11,12 @@ import {
   LayoutDashboard, Clock, Calendar, List, 
   ChevronLeft, ChevronRight, RefreshCw, Sparkles 
 } from 'lucide-react';
-import { MOCK_TASKS } from '@/utils/mockData';
+import { taskService } from '@/lib/taskService';
 
 export default function Sidebar() {
   const [currentView, setCurrentView] = useAtom(currentViewAtom);
   const [sidebarOpen, setSidebarOpen] = useAtom(sidebarOpenAtom);
-  const [, setTasks] = useAtom(tasksAtom);
+  const [tasks] = useAtom(tasksAtom);
 
   const navItems = [
     { id: 'board', label: 'Kanban Board', icon: <LayoutDashboard size={15} /> },
@@ -25,10 +25,9 @@ export default function Sidebar() {
     { id: 'list', label: 'Tasks Database', icon: <List size={15} /> },
   ];
 
-  const handleResetData = () => {
+  const handleResetData = async () => {
     if (confirm('Are you sure you want to completely clear all tasks? This cannot be undone.')) {
-      setTasks([]);
-      localStorage.setItem('task-tracker-tasks', JSON.stringify([]));
+      await Promise.all(tasks.map(t => taskService.deleteTask(t.id)));
       alert('Dashboard cleared successfully!');
     }
   };
