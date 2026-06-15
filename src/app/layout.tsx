@@ -10,6 +10,12 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "TaskPad",
   description: "Personal daily task tracker and planner.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "TaskPad",
+  },
 };
 
 export default function RootLayout({
