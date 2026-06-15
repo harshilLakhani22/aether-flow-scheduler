@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAtom, useSetAtom } from 'jotai';
 import { 
   currentViewAtom, tasksAtom, isLoadedAtom, 
@@ -20,6 +20,9 @@ import TaskCreateModal from './TaskCreateModal';
 import BottomNav from './BottomNav';
 import { AnimatePresence, motion } from 'framer-motion';
 import { taskService } from '@/lib/taskService';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import LoginScreen from './LoginScreen';
 
 export default function AppShell() {
   const [theme] = useAtom(themeAtom);
@@ -29,16 +32,33 @@ export default function AppShell() {
   const setIsCreateOpen = useSetAtom(isTaskCreateModalOpenAtom);
   const setIsDrawerOpen = useSetAtom(isTaskModalOpenAtom);
 
-  // 1. Client-Side Hydration & Real-time Sync from Firebase
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoaded, setAuthLoaded] = useState(false);
+
+  // 1. Auth State Management
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const unsubscribe = taskService.subscribeToTasks((fetchedTasks) => {
+      const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+        setUser(currentUser);
+        setAuthLoaded(true);
+        if (!currentUser) {
+          setIsLoaded(true); // Don't block loading if logged out
+        }
+      });
+      return () => unsubscribeAuth();
+    }
+  }, [setIsLoaded]);
+
+  // 2. Client-Side Hydration & Real-time Sync from Firebase
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user) {
+      const unsubscribe = taskService.subscribeToTasks(user.uid, (fetchedTasks) => {
         setTasks(fetchedTasks);
         setIsLoaded(true);
       });
       return () => unsubscribe();
     }
-  }, [setTasks, setIsLoaded]);
+  }, [setTasks, setIsLoaded, user]);
 
   // 3. Global Keyboard Shortcuts
   useEffect(() => {
@@ -123,6 +143,10 @@ export default function AppShell() {
         </div>
       </div>
     );
+  }
+
+  if (authLoaded && !user) {
+    return <LoginScreen />;
   }
 
   return (

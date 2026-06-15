@@ -9,9 +9,11 @@ import {
 import { ViewType } from '@/types';
 import { 
   LayoutDashboard, Clock, Calendar, List, 
-  ChevronLeft, ChevronRight, RefreshCw, Sparkles 
+  ChevronLeft, ChevronRight, RefreshCw, Sparkles, LogOut
 } from 'lucide-react';
 import { taskService } from '@/lib/taskService';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
 
 export default function Sidebar() {
   const [currentView, setCurrentView] = useAtom(currentViewAtom);
@@ -29,6 +31,12 @@ export default function Sidebar() {
     if (confirm('Are you sure you want to completely clear all tasks? This cannot be undone.')) {
       await Promise.all(tasks.map(t => taskService.deleteTask(t.id)));
       alert('Dashboard cleared successfully!');
+    }
+  };
+
+  const handleSignOut = async () => {
+    if (confirm('Are you sure you want to sign out?')) {
+      await signOut(auth);
     }
   };
 
@@ -133,6 +141,15 @@ export default function Sidebar() {
         >
           <RefreshCw size={10} />
           <span>Clear Dashboard</span>
+        </button>
+
+        <button
+          onClick={handleSignOut}
+          className="w-full flex items-center justify-center gap-2 py-1.5 hover:bg-muted border border-border rounded-md text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+          title="Sign out of TaskPad"
+        >
+          <LogOut size={10} />
+          <span>Sign Out</span>
         </button>
 
         <div className="flex items-center justify-between text-[9px] text-muted-foreground/80 font-bold uppercase tracking-wider px-1">

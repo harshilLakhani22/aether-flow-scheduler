@@ -2,16 +2,23 @@ import { collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, query, write
 import { db } from './firebase';
 import { Task } from '@/types';
 
-// We use a single global collection for this personal task tracker
-const TASKS_COLLECTION = 'tasks';
+import { auth } from './firebase';
+
+const getUserId = () => {
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error("User must be authenticated to access tasks");
+  return uid;
+};
+
+const getTasksCollectionPath = () => `users/${getUserId()}/tasks`;
 
 export const taskService = {
   /**
-   * Subscribes to all tasks in the database and fires the callback whenever data changes.
-   * Returns an unsubscribe function to clean up the listener.
+   * Subscribes to all tasks for the logged-in user and fires the callback whenever data changes.
    */
-  subscribeToTasks: (callback: (tasks: Task[]) => void) => {
-    const q = query(collection(db, TASKS_COLLECTION));
+  subscribeToTasks: (userId: string, callback: (tasks: Task[]) => void) => {
+    // using explicit userId from AppShell to ensure it's available during mount
+    const q = query(collection(db, `users/${userId}/tasks`));
     return onSnapshot(q, (snapshot) => {
       const tasks: Task[] = [];
       snapshot.forEach((doc) => {
@@ -25,7 +32,7 @@ export const taskService = {
    * Adds a new task to the database.
    */
   addTask: async (task: Task) => {
-    const docRef = doc(collection(db, TASKS_COLLECTION), task.id);
+    const docRef = doc(collection(db, getTasksCollectionPath()), task.id);
     await setDoc(docRef, {
       ...task,
       createdAt: new Date().toISOString(),
@@ -37,7 +44,7 @@ export const taskService = {
    * Updates an existing task with partial data.
    */
   updateTask: async (taskId: string, updates: Partial<Task>) => {
-    const docRef = doc(db, TASKS_COLLECTION, taskId);
+    const docRef = doc(db, getTasksCollectionPath(), taskId);
     await updateDoc(docRef, {
       ...updates,
       updatedAt: new Date().toISOString()
@@ -48,17 +55,18 @@ export const taskService = {
    * Deletes a task from the database.
    */
   deleteTask: async (taskId: string) => {
-    const docRef = doc(db, TASKS_COLLECTION, taskId);
+    const docRef = doc(db, getTasksCollectionPath(), taskId);
     await deleteDoc(docRef);
   },
 
   /**
-   * Updates multiple tasks in a single batch (e.g., for drag-and-drop reordering).
+   * Updates multiple tasks in a single batch.
    */
   updateMultipleTasks: async (tasks: Task[]) => {
     const batch = writeBatch(db);
+    const path = getTasksCollectionPath();
     tasks.forEach(task => {
-      const docRef = doc(db, TASKS_COLLECTION, task.id);
+      const docRef = doc(db, path, task.id);
       batch.set(docRef, { ...task, updatedAt: new Date().toISOString() }, { merge: true });
     });
     await batch.commit();

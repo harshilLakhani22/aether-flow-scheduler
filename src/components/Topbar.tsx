@@ -11,8 +11,10 @@ import { ViewType } from '@/types';
 import { 
   ChevronLeft, ChevronRight, Search, Plus, 
   Menu, X, Calendar, LayoutDashboard, Clock, List,
-  Sun, Moon
+  Sun, Moon, LogOut
 } from 'lucide-react';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
 import { format, parseISO, addDays, subDays } from 'date-fns';
 
 export default function Topbar() {
@@ -159,6 +161,19 @@ export default function Topbar() {
           {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
         </button>
  
+        {/* Sign Out Button (Mobile & Desktop Header) */}
+        <button
+          onClick={async () => {
+            if (confirm('Are you sure you want to sign out?')) {
+              await signOut(auth);
+            }
+          }}
+          className="p-1.5 hover:bg-rose-500/10 border border-border text-muted-foreground hover:text-rose-500 rounded-lg transition-colors flex items-center justify-center cursor-pointer active:scale-95 md:hidden"
+          title="Sign Out"
+        >
+          <LogOut size={14} />
+        </button>
+
         {/* Quick Add button */}
         <button
           onClick={() => setIsCreateOpen(true)}
