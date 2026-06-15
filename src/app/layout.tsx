@@ -8,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Aether | Flow Scheduler",
-  description: "Advanced daily time-blocking and Kanban flow.",
+  title: "TaskPad",
+  description: "Personal daily task tracker and planner.",
 };
 
 export default function RootLayout({

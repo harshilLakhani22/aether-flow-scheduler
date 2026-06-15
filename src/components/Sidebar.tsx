@@ -38,7 +38,7 @@ export default function Sidebar() {
       <div className="w-16 h-screen border-r border-border bg-card flex flex-col items-center py-6 gap-6 shrink-0 transition-all select-none">
         {/* Compact Logo */}
         <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center font-black text-primary-foreground text-xs shadow-md">
-          A
+          T
         </div>
 
         <div className="h-px w-8 bg-border" />
@@ -78,14 +78,14 @@ export default function Sidebar() {
       <div className="p-5 border-b border-border flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center font-black text-primary-foreground shrink-0 shadow-sm">
-            Æ
+            T
           </div>
           <div className="flex flex-col">
             <span className="text-[13px] font-black tracking-widest text-foreground uppercase">
-              AETHER
+              TASKPAD
             </span>
             <span className="text-[9px] font-bold tracking-widest text-muted-foreground uppercase leading-none mt-0.5">
-              {'// FLOW'}
+              {'// PLANNER'}
             </span>
           </div>
         </div>
@@ -137,7 +137,7 @@ export default function Sidebar() {
         </button>
 
         <div className="flex items-center justify-between text-[9px] text-muted-foreground/80 font-bold uppercase tracking-wider px-1">
-          <span>Aether v1.0</span>
+          <span>TaskPad v1.0</span>
           <span className="text-muted-foreground flex items-center gap-0.5">
             <Sparkles size={8} /> Active
           </span>

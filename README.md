@@ -1,8 +1,8 @@
-# Aether // Flow ⚡️
+# TaskPad ⚡️
 
-A gorgeous, production-grade Kanban and Time-Blocking hybrid scheduler designed for deep-work professionals. Built with Next.js 16, Tailwind CSS, Framer Motion, and Jotai.
+A gorgeous, production-grade personal task tracker and time-blocking planner. Built with Next.js 16, Tailwind CSS, Framer Motion, and Jotai.
 
-![Aether Flow Preview](https://github.com/user-attachments/assets/preview) 
+![TaskPad Preview](https://github.com/user-attachments/assets/preview) 
 *(Screenshot coming soon)*
 
 ## ✨ Features
