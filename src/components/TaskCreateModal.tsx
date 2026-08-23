@@ -130,25 +130,35 @@ export default function TaskCreateModal() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (timeError) return;
 
     const tags = tagsInput.split(',').map((t) => t.trim()).filter(Boolean);
-    const calculatedDur = startTime && endTime 
-      ? timeToMinutes(endTime) - timeToMinutes(startTime) 
-      : estimatedDuration;
+    
+    // Only schedule if both startTime and endTime are provided
+    let finalStart = startTime || undefined;
+    let finalEnd = endTime || undefined;
+    let calculatedDur = estimatedDuration || 60;
+
+    if (finalStart && finalEnd) {
+      const startMin = timeToMinutes(finalStart);
+      const endMin = timeToMinutes(finalEnd);
+      calculatedDur = endMin < startMin ? (endMin + 1440 - startMin) : Math.max(15, endMin - startMin);
+    } else {
+      finalStart = undefined;
+      finalEnd = undefined;
+    }
 
     const newTask: Task = {
       id: `task-${Date.now()}`,
-      title: title.trim(),
+      title: title.trim() || 'New Task',
       description: description.trim(),
       project: project.trim() || 'General',
       type,
       priority,
       status: 'not_started',
       completed: false,
-      date,
-      startTime: startTime || undefined,
-      endTime: endTime || undefined,
+      date: date || new Date().toISOString().split('T')[0],
+      startTime: finalStart,
+      endTime: finalEnd,
       duration: calculatedDur,
       estimatedDuration: calculatedDur,
       color,
@@ -279,7 +289,6 @@ export default function TaskCreateModal() {
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Task Title</label>
                 <input
                   type="text"
-                  required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="What are we planning to achieve?"
@@ -288,7 +297,9 @@ export default function TaskCreateModal() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Description & Notes</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">
+                  Description & Notes <span className="opacity-60 normal-case font-normal">(Optional)</span>
+                </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -444,9 +455,22 @@ export default function TaskCreateModal() {
                   </div>
                 </div>
               </div>
-              {(!startTime || !endTime) && (
+              
+              {startTime || endTime ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStartTime('');
+                    setEndTime('');
+                    setTimeError(null);
+                  }}
+                  className="w-full py-2 border border-dashed border-border/80 hover:border-rose-500/50 text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10 text-[10px] font-extrabold uppercase tracking-widest rounded-xl transition-all duration-300 mt-2"
+                >
+                  Clear Time (Create as Unscheduled Inbox Item)
+                </button>
+              ) : (
                 <div className="text-[10px] text-muted-foreground/80 font-medium text-center italic mt-2">
-                  Leave times empty to place task in the Unscheduled inbox.
+                  Task will be created in your Unscheduled Inbox.
                 </div>
               )}
             </div>
@@ -513,8 +537,7 @@ export default function TaskCreateModal() {
               </button>
               <button
                 type="submit"
-                disabled={!!timeError}
-                className="py-2.5 px-6 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-xs font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="py-2.5 px-6 bg-primary hover:bg-primary/90 rounded-xl text-xs font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 Create Task
               </button>

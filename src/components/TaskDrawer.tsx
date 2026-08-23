@@ -139,16 +139,16 @@ export default function TaskDrawer() {
   if (!selectedTask) return null;
 
   const handleSave = async () => {
-    if (!title.trim()) return;
+    const finalTitle = title.trim() || selectedTask.title || 'Untitled Task';
 
     let finalStart = startTime || undefined;
     let finalEnd = endTime || undefined;
     let computedDuration = undefined;
 
-    if (startTime && endTime && !timeError) {
-      finalStart = startTime;
-      finalEnd = endTime;
-      computedDuration = calculateDuration(startTime, endTime);
+    if (finalStart && finalEnd) {
+      const startMin = timeToMinutes(finalStart);
+      const endMin = timeToMinutes(finalEnd);
+      computedDuration = endMin < startMin ? (endMin + 1440 - startMin) : Math.max(15, endMin - startMin);
     } else {
       finalStart = undefined;
       finalEnd = undefined;
@@ -156,18 +156,18 @@ export default function TaskDrawer() {
 
     const updatedTask: Task = {
       ...selectedTask,
-      title: title.trim(),
+      title: finalTitle,
       description: description.trim(),
       status,
       priority,
       type,
       color,
       project: project.trim() || 'General',
-      date,
+      date: date || selectedTask.date,
       startTime: finalStart,
       endTime: finalEnd,
-      duration: computedDuration,
-      estimatedDuration: computedDuration || estimatedDuration,
+      duration: computedDuration || estimatedDuration || 60,
+      estimatedDuration: computedDuration || estimatedDuration || 60,
       completed,
       tags: tagsInput
         .split(',')
@@ -300,7 +300,9 @@ export default function TaskDrawer() {
 
               {/* Description Input */}
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Description</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-1">
+                  Description & Notes <span className="opacity-60 normal-case font-normal">(Optional)</span>
+                </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -561,8 +563,7 @@ export default function TaskDrawer() {
               <button
                 type="button"
                 onClick={handleSave}
-                disabled={!!timeError}
-                className="py-3 px-4 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
+                className="py-3 px-4 bg-primary hover:bg-primary/90 rounded-xl text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
               >
                 Save Changes
               </button>
