@@ -20,7 +20,7 @@ import TaskCreateModal from './TaskCreateModal';
 import BottomNav from './BottomNav';
 import { AnimatePresence, motion } from 'framer-motion';
 import { taskService } from '@/lib/taskService';
-import { auth } from '@/lib/firebase';
+import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import LoginScreen from './LoginScreen';
 
@@ -35,27 +35,60 @@ export default function AppShell() {
   const [user, setUser] = useState<User | null>(null);
   const [authLoaded, setAuthLoaded] = useState(false);
 
-  // 1. Auth State Management
+  // 1. Auth State Management with Safety Timeout
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-        setUser(currentUser);
+      if (!isFirebaseConfigured) {
+        console.warn('Firebase is not configured with environment variables.');
         setAuthLoaded(true);
-        if (!currentUser) {
-          setIsLoaded(true); // Don't block loading if logged out
+        setIsLoaded(true);
+        return;
+      }
+
+      // Safety fallback: ensure UI is never stuck on "Initializing..." indefinitely
+      const safetyTimer = setTimeout(() => {
+        setAuthLoaded(true);
+        setIsLoaded(true);
+      }, 3500);
+
+      const unsubscribeAuth = onAuthStateChanged(
+        auth,
+        (currentUser) => {
+          clearTimeout(safetyTimer);
+          setUser(currentUser);
+          setAuthLoaded(true);
+          if (!currentUser) {
+            setIsLoaded(true); // Don't block loading if logged out
+          }
+        },
+        (error) => {
+          clearTimeout(safetyTimer);
+          console.error('Auth state error:', error);
+          setAuthLoaded(true);
+          setIsLoaded(true);
         }
-      });
-      return () => unsubscribeAuth();
+      );
+      return () => {
+        clearTimeout(safetyTimer);
+        unsubscribeAuth();
+      };
     }
   }, [setIsLoaded]);
 
   // 2. Client-Side Hydration & Real-time Sync from Firebase
   useEffect(() => {
     if (typeof window !== 'undefined' && user) {
-      const unsubscribe = taskService.subscribeToTasks(user.uid, (fetchedTasks) => {
-        setTasks(fetchedTasks);
-        setIsLoaded(true);
-      });
+      const unsubscribe = taskService.subscribeToTasks(
+        user.uid,
+        (fetchedTasks) => {
+          setTasks(fetchedTasks);
+          setIsLoaded(true);
+        },
+        (err) => {
+          console.error('Tasks sync error:', err);
+          setIsLoaded(true);
+        }
+      );
       return () => unsubscribe();
     }
   }, [setTasks, setIsLoaded, user]);

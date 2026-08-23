@@ -3,22 +3,49 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Calendar, CheckCircle, Target, Loader2 } from 'lucide-react';
-import { auth } from '@/lib/firebase';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { auth, isFirebaseConfigured } from '@/lib/firebase';
+import { GoogleAuthProvider, signInWithPopup, signInWithRedirect } from 'firebase/auth';
 
 export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleGoogleSignIn = async () => {
+    if (!isFirebaseConfigured) {
+      setError(
+        'Firebase configuration is missing. Please add NEXT_PUBLIC_FIREBASE_* environment variables in Vercel Settings -> Environment Variables.'
+      );
+      return;
+    }
     setIsLoading(true);
     setError(null);
+    const provider = new GoogleAuthProvider();
+
     try {
-      const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
     } catch (err: any) {
       console.error('Error signing in with Google:', err);
-      setError(err.message || 'Failed to sign in. Please try again.');
+
+      if (err.code === 'auth/popup-blocked') {
+        // Automatically attempt redirect flow when popups are blocked by the browser
+        try {
+          await signInWithRedirect(auth, provider);
+          return;
+        } catch (redirectErr: any) {
+          setError(
+            'Pop-up was blocked by your browser. Please click the pop-up icon in your address bar to allow pop-ups for this site, or try again.'
+          );
+        }
+      } else if (err.code === 'auth/unauthorized-domain') {
+        const currentDomain = typeof window !== 'undefined' ? window.location.hostname : 'your domain';
+        setError(
+          `Domain "${currentDomain}" is not authorized. Please add it to Firebase Console -> Authentication -> Settings -> Authorized Domains.`
+        );
+      } else if (err.code === 'auth/popup-closed-by-user') {
+        setError('Sign-in cancelled. Please click "Continue with Google" to log in.');
+      } else {
+        setError(err.message || 'Failed to sign in. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }

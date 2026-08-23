@@ -12,22 +12,39 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
+export const isFirebaseConfigured = !!(
+  process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
+  process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+);
+
+if (!isFirebaseConfigured && typeof window !== 'undefined') {
+  console.warn(
+    '⚠️ Firebase environment variables are missing. Please add NEXT_PUBLIC_FIREBASE_* keys to your .env.local or Vercel Environment Variables.'
+  );
+}
+
 // Initialize Firebase only if config is provided to avoid crashing before setup
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const app = !getApps().length
+  ? initializeApp(firebaseConfig)
+  : getApp();
+
 const db = getFirestore(app);
 const auth = getAuth(app);
 
 // Attempt to enable offline persistence (optional, fails gracefully in some browsers/incognito)
-try {
-  enableIndexedDbPersistence(db).catch((err) => {
-    if (err.code == 'failed-precondition') {
-      console.warn('Multiple tabs open, persistence can only be enabled in one tab at a a time.');
-    } else if (err.code == 'unimplemented') {
-      console.warn('The current browser does not support all of the features required to enable persistence');
-    }
-  });
-} catch (e) {
-  // Ignore
+if (typeof window !== 'undefined') {
+  try {
+    enableIndexedDbPersistence(db).catch((err) => {
+      if (err.code == 'failed-precondition') {
+        console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+      } else if (err.code == 'unimplemented') {
+        console.warn('The current browser does not support all of the features required to enable persistence');
+      }
+    });
+  } catch {
+    // Ignore
+  }
 }
 
 export { app, db, auth };
+

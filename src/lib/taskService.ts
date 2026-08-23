@@ -16,16 +16,28 @@ export const taskService = {
   /**
    * Subscribes to all tasks for the logged-in user and fires the callback whenever data changes.
    */
-  subscribeToTasks: (userId: string, callback: (tasks: Task[]) => void) => {
+  subscribeToTasks: (userId: string, callback: (tasks: Task[]) => void, onError?: (err: Error) => void) => {
     // using explicit userId from AppShell to ensure it's available during mount
     const q = query(collection(db, `users/${userId}/tasks`));
-    return onSnapshot(q, (snapshot) => {
-      const tasks: Task[] = [];
-      snapshot.forEach((doc) => {
-        tasks.push(doc.data() as Task);
-      });
-      callback(tasks);
-    });
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const tasks: Task[] = [];
+        snapshot.forEach((doc) => {
+          tasks.push(doc.data() as Task);
+        });
+        callback(tasks);
+      },
+      (error) => {
+        console.error('Firestore snapshot subscription error:', error);
+        if (onError) {
+          onError(error);
+        } else {
+          // Default: still unblock UI
+          callback([]);
+        }
+      }
+    );
   },
 
   /**
